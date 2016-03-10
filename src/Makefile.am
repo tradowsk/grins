@@ -10,12 +10,14 @@ bin_PROGRAMS    = grins grins_version
 
 if CANTERA_ENABLED
    bin_PROGRAMS += cantera_kinetic_rates
+   bin_PROGRAMS += cantera_thermo
 endif
 
 if ANTIOCH_ENABLED
    bin_PROGRAMS += antioch_thermo_tables
    bin_PROGRAMS += antioch_kinetic_rates
    bin_PROGRAMS += antioch_transport_values
+   bin_PROGRAMS += antioch_thermo
 endif
 
 #----------------------------------------------
@@ -514,6 +516,9 @@ endif
 if CANTERA_ENABLED
    cantera_kinetic_rates_SOURCES = apps/cantera_kinetic_rates.C
    cantera_kinetic_rates_LDADD = libgrins.la
+   
+   cantera_thermo_SOURCES = apps/cantera_thermo.C
+   cantera_thermo_LDADD = libgrins.la
 endif
 
 if ANTIOCH_ENABLED
@@ -525,6 +530,9 @@ if ANTIOCH_ENABLED
 
    antioch_transport_values_SOURCES = apps/antioch_transport_values.C
    antioch_transport_values_LDADD = libgrins.la
+   
+   antioch_thermo_SOURCES = apps/antioch_thermo.C
+   antioch_thermo_LDADD = libgrins.la
 endif
 
 #--------------------------------------
