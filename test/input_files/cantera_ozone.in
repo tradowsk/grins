@@ -1,0 +1,16 @@
+#
+# Options related to all Physics
+[Materials]
+  [./TestMaterial]
+     [./GasMixture]
+        thermochemistry_library = 'cantera'
+        species = 'O O2 O3'
+        kinetics_data = './input_files/ozone.xml'
+
+      [./Cantera]
+           gas_mixture = 'ozone'
+[]
+
+[screen-options]
+
+verbose_kinetics_read = 'true'

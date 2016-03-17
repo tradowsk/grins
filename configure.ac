@@ -398,6 +398,7 @@ dnl-----------------------------------------------------------------------------
 AC_CONFIG_LINKS([test/input_files/air_2sp.xml:test/input_files/air_2sp.xml])
 AC_CONFIG_LINKS([test/input_files/air_4sp.xml:test/input_files/air_4sp.xml])
 AC_CONFIG_LINKS([test/input_files/air_5sp_test.xml:test/input_files/air_5sp_test.xml])
+AC_CONFIG_LINKS([test/input_files/ozone.xml:test/input_files/ozone.xml])
 AC_CONFIG_LINKS([test/input_files/air.xml:test/input_files/air.xml])
 AC_CONFIG_LINKS([test/input_files/elements.xml:test/input_files/elements.xml])
 
@@ -425,6 +426,7 @@ AC_CONFIG_FILES(examples/inflating_sheet/run.sh,             [chmod +x examples/
 AC_CONFIG_FILES(examples/sa_airfoil/run.sh,         [chmod +x examples/sa_airfoil/run.sh])
 AC_CONFIG_FILES(examples/suspended_cable/run.sh,             [chmod +x examples/suspended_cable/run.sh])
 AC_CONFIG_FILES(examples/mixed_dim_inflating_sheet/run.sh,   [chmod +x examples/mixed_dim_inflating_sheet/run.sh])
+AC_CONFIG_FILES(examples/transient_amr/run.sh,   [chmod +x examples/transient_amr/run.sh])
 
 dnl-----------------------------------------------
 dnl Generate header files

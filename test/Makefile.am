@@ -1,6 +1,7 @@
 
 AM_TESTS_ENVIRONMENT  = GRINS_TEST_DIR=$(top_builddir)/test; export GRINS_TEST_DIR;
 AM_TESTS_ENVIRONMENT += GRINS_BUILDSRC_DIR=$(top_builddir)/src; export GRINS_BUILDSRC_DIR;
+AM_TESTS_ENVIRONMENT += GRINS_TEST_SRCDIR_DIR=$(top_srcdir)/test; export GRINS_TEST_SRCDIR_DIR;
 AM_TESTS_ENVIRONMENT += GRINS_TEST_INPUT_DIR=$(top_srcdir)/test/input_files; export GRINS_TEST_INPUT_DIR;
 AM_TESTS_ENVIRONMENT += GRINS_TEST_DATA_DIR=$(top_srcdir)/test/test_data; export GRINS_TEST_DATA_DIR;
 AM_TESTS_ENVIRONMENT += GRINS_LIBMESH_DIM=@LIBMESH_DIM@; export GRINS_LIBMESH_DIM;
@@ -104,7 +105,8 @@ check_PROGRAMS += generic_solution_regression
 check_PROGRAMS += axisym_reacting_low_mach_regression
 
 
-
+# AMR Tests
+check_PROGRAMS += generic_amr_testing_app
 
 # Unit test source files
 antioch_mixture_SOURCES = unit/antioch_mixture.C
@@ -119,7 +121,8 @@ split_string_SOURCES = unit/split_string.C
 
 # Interface test source files
 interface_cppunit_test_SOURCES = interface/interface_cppunit_test.C \
-                                 interface/air_5sp.C
+                                 interface/air_5sp.C \
+                                 interface/ozone.C
 
 antioch_mixture_averaged_transport_evaluator_regression_SOURCES = interface/antioch_mixture_averaged_transport_evaluator_regression.C
 cantera_transport_regression_SOURCES = interface/cantera_transport_regression.C
@@ -144,6 +147,9 @@ elastic_sheet_regression_SOURCES = regression/elastic_sheet_regression.C
 suspended_cable_regression_SOURCES = regression/suspended_cable_regression.C
 generic_solution_regression_SOURCES = regression/generic_solution_regression.C
 axisym_reacting_low_mach_regression_SOURCES = regression/axisym_reacting_low_mach_regression.C
+
+# AMR test source files
+generic_amr_testing_app_SOURCES = amr/generic_amr_testing_app.C
 
 
 #Define tests to actually be run
@@ -264,6 +270,10 @@ TESTS += regression/elastic_mooney_rivlin_square_hookean_stiffeners_unifref.sh
 TESTS += regression/elastic_mooney_rivlin_square_hookean_stiffeners_newmark.sh
 TESTS += regression/elastic_mooney_rivlin_square_hookean_stiffeners_rayleigh_damping_newmark.sh
 TESTS += regression/extra_quadrature_order_laplace_arefee_amr.sh
+
+
+#AMR TESTS
+TESTS += amr/convection_diffusion_unsteady_2d.sh
 
 CLEANFILES =
 

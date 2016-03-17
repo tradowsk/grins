@@ -30,12 +30,22 @@
 // GRINS
 #include "grins/physical_constants.h"
 
+// libMesh
+#include "libmesh/libmesh.h"
+
 namespace GRINSTesting
 {
   class SpeciesTestBase
   {
   public:
-
+    SpeciesTestBase()
+      : _N2_idx(libMesh::invalid_uint),
+        _O2_idx(libMesh::invalid_uint),
+        _O_idx(libMesh::invalid_uint),
+        _N_idx(libMesh::invalid_uint),
+        _NO_idx(libMesh::invalid_uint),
+        _O3_idx(libMesh::invalid_uint)
+    {}
     libMesh::Real molar_mass( unsigned int idx )
     {
       libMesh::Real value = 0.0;
@@ -54,6 +64,9 @@ namespace GRINSTesting
 
       else if(idx == _N_idx)
         value = 14.008;
+        
+      else if(idx == _O3_idx)
+        value = 48.0;
 
       else
         CPPUNIT_FAIL("Invalid idx for molar_mass");
@@ -69,7 +82,7 @@ namespace GRINSTesting
   protected:
 
     // Species indices. Should be set by subclass at init time.
-    unsigned int _N2_idx, _O2_idx, _O_idx, _N_idx, _NO_idx;
+    unsigned int _N2_idx, _O2_idx, _O_idx, _N_idx, _NO_idx, _O3_idx;
 
     // Species being tested
     std::vector<unsigned int> _active_species;
