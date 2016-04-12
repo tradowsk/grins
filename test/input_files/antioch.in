@@ -13,4 +13,4 @@
 
 [screen-options]
 
-verbose_kinetics_read = 'true'
+#verbose_kinetics_read = 'true'

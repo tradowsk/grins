@@ -156,7 +156,7 @@ namespace GRINSTesting
       _reactant_stoich_coeffs[2].resize(n_species, 0.0);
       _product_stoich_coeffs[2].resize(n_species, 0.0);
       _reactant_stoich_coeffs[2][_O_idx] = 1.0;
-      _product_stoich_coeffs[2][_O3_idx] = 1.0;
+      _reactant_stoich_coeffs[2][_O3_idx] = 1.0;
       _product_stoich_coeffs[2][_O2_idx] = 2.0;
     }
 
@@ -283,9 +283,9 @@ namespace GRINSTesting
     void test_cp()
     {
       std::vector<libMesh::Real> Y(3);
-      Y[_O_idx] = 0.0;
-      Y[_O2_idx] = 0.8;
-      Y[_O3_idx] = 0.2;
+      Y[_O_idx] = 1.0;
+      Y[_O2_idx] = 0.0;
+      Y[_O3_idx] = 0.0;
 
       this->test_cp_common<GRINS::CanteraMixture,GRINS::CanteraEvaluator>
         ( *_cantera_mixture, Y, 1.0e-4 );
