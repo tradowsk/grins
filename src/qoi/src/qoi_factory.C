@@ -148,7 +148,7 @@ namespace GRINS
 
         std::string hitran_partition;
         this->get_var_value<std::string>(input,hitran_partition,"QoI/SpectroscopicAbsorption/hitran_partition_function_file","");
-          
+
         libMesh::Real T_min,T_max,T_step;
         std::string partition_temp_var = "QoI/SpectroscopicAbsorption/partition_temperatures";
         if (input.have_variable(partition_temp_var))
@@ -165,7 +165,7 @@ namespace GRINS
         std::string species;
         this->get_var_value<std::string>(input,species,"QoI/SpectroscopicAbsorption/species_of_interest","");
 
-        SharedPtr<libMesh::FEMFunctionBase<libMesh::Real> > absorb;
+        SharedPtr<FEMFunctionAndDerivativeBase<libMesh::Real> > absorb;
 
         libMesh::Real thermo_pressure = -1.0;
         bool calc_thermo_pressure = input("QoI/SpectroscopicAbsorption/calc_thermo_pressure", false );
@@ -289,7 +289,7 @@ namespace GRINS
 
     libmesh_error();
   }
-  
+
   template<typename T>
   void QoIFactory::get_var_value( const GetPot & input, T & value, std::string input_var, T default_value )
   {

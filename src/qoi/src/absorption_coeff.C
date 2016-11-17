@@ -147,6 +147,16 @@ namespace GRINS
   }
 
   template<typename Chemistry>
+  void AbsorptionCoeff<Chemistry>::derivatives( libMesh::FEMContext & /*context*/,
+                                                const libMesh::Point & /*p*/,
+                                                const unsigned int /*qoi_index*/,
+                                                const libMesh::Real /*time*/)
+  {
+    // TODO
+    libmesh_not_implemented();
+  }
+
+  template<typename Chemistry>
   void AbsorptionCoeff<Chemistry>::operator()( const libMesh::FEMContext& /*context*/,
                                           const libMesh::Point& /*p*/,
                                           const libMesh::Real /*time*/,
