@@ -27,30 +27,30 @@
 #define GRINS_ABSORPTION_COEFF_H
 
 // GRINS
+#include "grins/fem_function_and_derivative_base.h"
 #include "grins/assembly_context.h"
 #include "grins/hitran.h"
 #include "grins/single_variable.h"
 #include "grins/multicomponent_variable.h"
 #include "grins/variable_warehouse.h"
-#include "grins/fem_function_and_derivative_base.h"
 
 namespace GRINS
 {
   /*!
     Evaluates the Beer-Lambert Law at a given point in space. It is intended to be used with the IntegratedFunction class for QoI evaluation.
-    
+
     We use the differential form for calculating the absorbance \f$ \alpha_{\nu} \f$
-    
+
     \f$ \alpha_{\nu} = -\frac{dI_{\nu}}{I_{\nu}} = k_{\nu} dx \f$
-    
+
     This class calculates the <i>spectral absorption coefficient</i>, denoted above as \f$ k_{\nu} \f$, which is passed back to IntegratedFunction::element_qoi()
     to evaluate the integral Beer-Lambert law
-    
+
     \f$ \frac{I_{\nu}}{I_{\nu}^0} = \exp\left\{- \int_0^L k_{\nu} dx\right\} \f$
 
     This class operates internally in [cm], [K], and [atm] since those are the base units used in the HITRAN data.
     In addition, the coefficients used in calculating the Voigt profile require these units to be used.
-    
+
     However, values given to the physics class(es) must be in standard SI units [m] and [Pa].
 
     A chemistry library (Antioch or Cantera) is also required.
@@ -77,11 +77,12 @@ namespace GRINS
     //! Calculate the absorption coefficient at a quadratue point
     virtual libMesh::Real operator()(const libMesh::FEMContext & context, const libMesh::Point & qp_xyz, const libMesh::Real t);
 
-    //! Calculate the derivatives with respect to Temperature, Pressure, and Species Mass Fraction
+    //! Calculate the derivative of the absorption coefficient at a QP with respect to all state variables
     virtual void derivatives( libMesh::FEMContext & context,
                               const libMesh::Point & p,
+                              const libMesh::Real & JxW,
                               const unsigned int qoi_index,
-                              const libMesh::Real time = 0.);
+                              const libMesh::Real time);
 
     //! Not used
     virtual void operator()( const libMesh::FEMContext & context,
@@ -136,6 +137,9 @@ namespace GRINS
     //! Absorption coefficient [cm^-1]
     libMesh::Real kv(libMesh::Real P,libMesh::Real T, libMesh::Real X, libMesh::Real M);
 
+    //! Linestrength [cm^-2 atm^-1]
+    libMesh::Real Sw(libMesh::Real T, libMesh::Real nu, unsigned int i);
+
     //! Doppler broadening [cm^-1]
     libMesh::Real nu_D(libMesh::Real nu, libMesh::Real T,libMesh::Real M);
 
@@ -154,7 +158,64 @@ namespace GRINS
 
     //! Initialize the coeff matrix for calculating the Voigt profile
     void init_voigt();
-    
+
+    //! Absorption coefficient temperature derivative
+    libMesh::Real d_kv_dT(libMesh::Real nu_D, libMesh::Real nu_c, libMesh::Real nu,
+                          libMesh::Real P, libMesh::Real T, libMesh::Real T_phi, libMesh::Real MW,
+                          libMesh::Real X, libMesh::Real S, libMesh::Real V, unsigned int i);
+
+    //! Absorption coefficient pressure derivative
+    libMesh::Real d_kv_dP(libMesh::Real nu_D, libMesh::Real nu_c, libMesh::Real nu,
+                          libMesh::Real P, libMesh::Real P_phi, libMesh::Real T, libMesh::Real MW,
+                          libMesh::Real X, libMesh::Real S, libMesh::Real V, unsigned int i);
+
+    //! Absorption coefficient mass fraction derivative
+    libMesh::Real d_kv_dY(libMesh::Real nu_D, libMesh::Real nu_c, libMesh::Real nu,
+                          libMesh::Real P, libMesh::Real T, libMesh::Real MW, libMesh::Real MW_mix,
+                          libMesh::Real X, libMesh::Real Y_phi, libMesh::Real S, libMesh::Real V, unsigned int i);
+
+    //! Linestrength temperature derivative
+    libMesh::Real dS_dT(libMesh::Real T, libMesh::Real T_phi, libMesh::Real nu, unsigned int i);
+
+    //! Linestrength pressure derivative
+    libMesh::Real dS_dP(libMesh::Real T, libMesh::Real nu, libMesh::Real P_phi, unsigned int i);
+
+    //! Doppler broadening temperature derivative
+    libMesh::Real d_nuD_dT(libMesh::Real nu, libMesh::Real T, libMesh::Real T_phi, libMesh::Real M);
+
+    //! Doppler broadening pressure derivative
+    libMesh::Real d_nuD_dP(libMesh::Real T, libMesh::Real M, libMesh::Real P_phi, unsigned int i);
+
+    //! Collisional broadening temperature derivative
+    libMesh::Real d_nuC_dT(libMesh::Real T, libMesh::Real T_phi,
+                            libMesh::Real X, libMesh::Real P, unsigned int i);
+
+    //! Collisional broadening pressure derivative
+    libMesh::Real d_nuC_dP(libMesh::Real T, libMesh::Real X,
+                           libMesh::Real P_phi, unsigned int i);
+
+    //! Collisional broadening mass fraction derivative
+    libMesh::Real d_nuC_dY(libMesh::Real P, libMesh::Real T, libMesh::Real MW,
+                           libMesh::Real MW_mix, libMesh::Real Y_phi, unsigned int i);
+
+    //! Voigt profile temperature derivative
+    libMesh::Real d_voigt_dT( libMesh::Real nu_D, libMesh::Real nu_c, libMesh::Real nu,
+                              libMesh::Real T, libMesh::Real T_phi, libMesh::Real X,
+                              libMesh::Real P, libMesh::Real M, unsigned int i);
+
+    //! Voigt profile pressure derivative
+    libMesh::Real d_voigt_dP( libMesh::Real nu_D, libMesh::Real nu_c, libMesh::Real nu,
+                              libMesh::Real T, libMesh::Real M, libMesh::Real X,
+                              libMesh::Real P_phi, unsigned int i);
+
+    //! Voigt profile mass fraction derivative
+    libMesh::Real d_voigt_dY( libMesh::Real nu_D, libMesh::Real nu_c, libMesh::Real nu,
+                              libMesh::Real T, libMesh::Real P, libMesh::Real MW,
+                              libMesh::Real MW_mix, libMesh::Real Y_phi, unsigned int i);
+
+    //! Partition Function derivative (finite difference)
+    libMesh::Real dQ_dT(libMesh::Real T, unsigned int iso);
+
     //! User should not call empty constructor
     AbsorptionCoeff();
   };
