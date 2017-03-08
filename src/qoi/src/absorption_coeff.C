@@ -42,7 +42,7 @@ namespace GRINS
   template<typename Chemistry>
   AbsorptionCoeff<Chemistry>::AbsorptionCoeff(SharedPtr<Chemistry> & chem, SharedPtr<HITRAN> & hitran,
                                               libMesh::Real nu_min, libMesh::Real nu_max,
-                                              libMesh::Real desired_nu, const std::string & species,
+                                              libMesh::Real desired_nu, const std::vector<std::string> & species_list,
                                               libMesh::Real thermo_pressure)
     : _chemistry(chem),
       _hitran(hitran),
@@ -64,43 +64,52 @@ namespace GRINS
            <<"desired_nu: " <<desired_nu <<std::endl;   
         libmesh_error_msg(ss.str());
       }
-    
-    _species_idx = _chemistry->species_index(species);
-    unsigned int data_size = _hitran->get_data_size();
-    
-    bool min_flag = false;
-    
-    for (unsigned int i=0; i<data_size; i++)
-      {
-        if (_hitran->nu0(i) > nu_min)
-          {
-            _min_index = i;
-            min_flag = true;
-            break;
-          }
-      }
       
-    if (!min_flag)
-      {
-        std::stringstream ss;
-        ss <<"Minimum wavenumber " <<nu_min <<" is greater than the maximum wavenumber in provided HITRAN data";
-        libmesh_error_msg(ss.str());
-      }
+    _species_idx.resize(species_list.size());
+    _min_index.resize(species_list.size());
+    _max_index.resize(species_list.size());
     
-    bool max_flag = false;
-    
-    for (unsigned int i=data_size-1; i>=0; i--)
+    for (unsigned int s=0; s<species_list.size(); s++)
       {
-        if (_hitran->nu0(i) < nu_max)
+        _species_idx[s] = _chemistry->species_index(species_list[s]);
+        _hitran->add_species(_species_idx[s],s);
+        
+        unsigned int data_size = _hitran->get_data_size(s);
+        
+        bool min_flag = false;
+        
+        for (unsigned int i=0; i<data_size; i++)
           {
-            _max_index = i;
-            max_flag = true;
-            break;
+            if (_hitran->nu0(s,i) > nu_min)
+              {
+                _min_index[s] = i;
+                min_flag = true;
+                break;
+              }
           }
+          
+        if (!min_flag)
+          {
+            std::stringstream ss;
+            ss <<"Minimum wavenumber " <<nu_min <<" is greater than the maximum wavenumber in provided HITRAN data";
+            libmesh_error_msg(ss.str());
+          }
+        
+        bool max_flag = false;
+        
+        for (unsigned int i=data_size-1; i>=0; i--)
+          {
+            if (_hitran->nu0(s,i) < nu_max)
+              {
+                _max_index[s] = i;
+                max_flag = true;
+                break;
+              }
+          }
+          
+        if (!max_flag)
+          _max_index[s] = data_size-1;
       }
-      
-    if (!max_flag)
-      _max_index = data_size-1;
 
     if (thermo_pressure == -1.0) {
       _calc_thermo_pressure = true;
@@ -136,14 +145,19 @@ namespace GRINS
     for (unsigned int s=0; s<_chemistry->n_species(); s++)
       context.point_value(_Y_var.species(s), qp_xyz, Y[s]);
 
-    libMesh::Real M = _chemistry->M(_species_idx); // [kg/mol]
-    libMesh::Real M_mix = _chemistry->M_mix(Y); // [kg/mol]
-    libMesh::Real X = _chemistry->X(_species_idx,M_mix,Y[_species_idx]);
-
     P /= 101325.0; // convert to [atm]
 
-    return this->kv(P,T,X,M);
-
+    libMesh::Real k_nu = 0.0;
+    
+    for (unsigned int s=0; s<_species_idx.size(); s++)
+      {
+        libMesh::Real M = _chemistry->M(_species_idx[s]); // [kg/mol]
+        libMesh::Real M_mix = _chemistry->M_mix(Y); // [kg/mol]
+        libMesh::Real X = _chemistry->X(_species_idx[s],M_mix,Y[_species_idx[s]]);
+        k_nu += kv(_species_idx[s],P,T,X,M);
+      }
+      
+    return k_nu;
   }
 
   template<typename Chemistry>
@@ -162,32 +176,35 @@ namespace GRINS
   }
 
   template<typename Chemistry>
-  libMesh::Real AbsorptionCoeff<Chemistry>::kv(libMesh::Real P,libMesh::Real T,libMesh::Real X,libMesh::Real M)
+  libMesh::Real AbsorptionCoeff<Chemistry>::kv(unsigned int species_var_index, libMesh::Real P,libMesh::Real T,libMesh::Real X,libMesh::Real M)
   {
     libMesh::Real kv = 0.0;
     
-    for (unsigned int i=_min_index; i<=_max_index; i++)
+    unsigned int species_idx = _hitran->get_species_idx(species_var_index);
+    libmesh_assert_not_equal_to(species_idx,libMesh::invalid_uint);
+    
+    for (unsigned int i=_min_index[species_idx]; i<=_max_index[species_idx]; i++)
       {
         // isotopologue 
-        unsigned int iso = _hitran->isotopologue(i);
+        unsigned int iso = _hitran->isotopologue(species_idx,i);
         
         // linecenter wavenumber
-        libMesh::Real nu0 = _hitran->nu0(i);
+        libMesh::Real nu0 = _hitran->nu0(species_idx,i);
 
         // linestrength
-        libMesh::Real sw0 = _hitran->sw(i);
+        libMesh::Real sw0 = _hitran->sw(species_idx,i);
 
         // partition function at reference temp
-        libMesh::Real QT0 = _hitran->partition_function(_T0,iso);
+        libMesh::Real QT0 = _hitran->partition_function(_T0,species_idx,iso);
 
         // partition function at current temp
-        libMesh::Real QT = _hitran->partition_function(T,iso);
+        libMesh::Real QT = _hitran->partition_function(T,species_idx,iso);
 
         // lower state energy of transition
-        libMesh::Real E = _hitran->elower(i);
+        libMesh::Real E = _hitran->elower(species_idx,i);
 
         // air pressure-induced line shift
-        libMesh::Real d_air = _hitran->delta_air(i);
+        libMesh::Real d_air = _hitran->delta_air(species_idx,i);
 
         // pressure shift of the linecenter wavenumber
         libMesh::Real nu = nu0 + d_air*(P/_Pref);
@@ -200,7 +217,7 @@ namespace GRINS
         S = S*loschmidt;
 
         // collisional FWHM [cm^-1]
-        libMesh::Real nu_c = this->nu_C(T,X,P,i);
+        libMesh::Real nu_c = this->nu_C(species_idx,T,X,P,i);
 
         // Doppler FWHM [cm^-1]
         libMesh::Real nu_D = this->nu_D(nu,T,M);
@@ -226,11 +243,11 @@ namespace GRINS
   }
 
   template<typename Chemistry>
-  libMesh::Real AbsorptionCoeff<Chemistry>::nu_C(libMesh::Real T,libMesh::Real X,libMesh::Real P, unsigned int index)
+  libMesh::Real AbsorptionCoeff<Chemistry>::nu_C(unsigned int species_idx,libMesh::Real T,libMesh::Real X,libMesh::Real P, unsigned int index)
   {
-    libMesh::Real g_self = _hitran->gamma_self(index);
-    libMesh::Real g_air = _hitran->gamma_air(index);
-    libMesh::Real n = _hitran->n_air(index);
+    libMesh::Real g_self = _hitran->gamma_self(species_idx,index);
+    libMesh::Real g_air = _hitran->gamma_air(species_idx,index);
+    libMesh::Real n = _hitran->n_air(species_idx,index);
 
     return 2.0*P*pow(_T0/T,n) * ( X*g_self + (1.0-X)*g_air );
   }

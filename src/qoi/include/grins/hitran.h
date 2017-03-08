@@ -66,45 +66,51 @@ namespace GRINS
       @param T_max The maximum temperature for the partition function values, inclusive
       @param T_step The step between successive temperature values
     */
-    HITRAN(const std::string & data_file, const std::string & partition_function_file,
+    HITRAN(const std::vector<std::string> & data_files, const std::vector<std::string> & partition_function_files,
            libMesh::Real T_min, libMesh::Real T_max, libMesh::Real T_step);
 
     //! Isotopologue ID
-    unsigned int isotopologue(unsigned int index);    
+    unsigned int isotopologue(unsigned int species_idx, unsigned int index);    
 
     //! Linecenter wavenumber [\f$ cm^{-1} \f$]
-    libMesh::Real nu0(unsigned int index);
+    libMesh::Real nu0(unsigned int species_idx, unsigned int index);
 
     //! Linestrength [\f$ \frac{cm^{-1}}{molecule \cdot cm^{-2}} \f$]
-    libMesh::Real sw(unsigned int index);
+    libMesh::Real sw(unsigned int species_idx, unsigned int index);
 
     //! Air-broadening half-width [\f$ cm^{-1} atm^{-1} \f$]
-    libMesh::Real gamma_air(unsigned int index);
+    libMesh::Real gamma_air(unsigned int species_idx, unsigned int index);
 
     //! Self-broadening half-wdith [\f$ cm^{-1} atm^{-1} \f$]
-    libMesh::Real gamma_self(unsigned int index);
+    libMesh::Real gamma_self(unsigned int species_idx, unsigned int index);
 
     //! Lower state energy of transition [\f$ cm^{-1} \f$]
-    libMesh::Real elower(unsigned int index);
+    libMesh::Real elower(unsigned int species_idx, unsigned int index);
 
     //! Temperature coefficient []
-    libMesh::Real n_air(unsigned int index);
+    libMesh::Real n_air(unsigned int species_idx, unsigned int index);
 
     //! Air pressure-induced line shift [\f$ cm^{-1} atm^{-1} \f$]
-    libMesh::Real delta_air(unsigned int index);
+    libMesh::Real delta_air(unsigned int species_idx, unsigned int index);
 
     //! Returns the value of the partition function
     //! of the given isotopologue at the given temperature
-    libMesh::Real partition_function(libMesh::Real T, unsigned int iso);
+    libMesh::Real partition_function(libMesh::Real T, unsigned int species_idx, unsigned int iso);
 
     //! Return the data size
-    unsigned int get_data_size();
+    unsigned int get_data_size(unsigned int species_idx);
+    
+    //! Get species index
+    unsigned int get_species_idx(unsigned int species_var_index);
+    
+    // Add species_var_map entry
+    void add_species(unsigned int species_var_index, unsigned int species_idx);
 
   protected:
     libMesh::Real _Tmin, _Tmax, _Tstep;
     
     //! Size of spectroscopic data
-    int _data_size;
+    std::vector<int> _data_size;
 
     //! Size of partition function data
     int _q_size;
@@ -112,28 +118,31 @@ namespace GRINS
     //! Reference temperature (296K)
     libMesh::Real _T0;
 
-    //! Value of partition function at reference temperature for all isotopologues.
+    //! Value of partition function at reference temperature for all species and isotopologues.
     //! Cached since it is used frequently
-    std::vector<libMesh::Real> _qT0;
+    std::vector<std::vector<libMesh::Real>> _qT0;
 
     // Vectors of data values
-    std::vector<unsigned int> _isotop;
-    std::vector<libMesh::Real> _nu;
-    std::vector<libMesh::Real> _sw;
-    std::vector<libMesh::Real> _gamma_air;
-    std::vector<libMesh::Real> _gamma_self;
-    std::vector<libMesh::Real> _elower;
-    std::vector<libMesh::Real> _n;
-    std::vector<libMesh::Real> _delta_air;
+    std::vector<std::vector<unsigned int>> _isotop;
+    std::vector<std::vector<libMesh::Real>> _nu;
+    std::vector<std::vector<libMesh::Real>> _sw;
+    std::vector<std::vector<libMesh::Real>> _gamma_air;
+    std::vector<std::vector<libMesh::Real>> _gamma_self;
+    std::vector<std::vector<libMesh::Real>> _elower;
+    std::vector<std::vector<libMesh::Real>> _n;
+    std::vector<std::vector<libMesh::Real>> _delta_air;
 
-    //! Vector for partition function values for all isotopologues
-    std::vector<std::vector<libMesh::Real>> _qT;
+    //! Vector for partition function values for all species and isotopologues
+    std::vector<std::vector<std::vector<libMesh::Real>>> _qT;
+    
+    //! Mapping between the species variable index and the zero-based index used herein
+    std::map<unsigned int,unsigned int> _species_var_map;
 
     //! Find the index into _T corresponding to the given temperature
     int _T_index(libMesh::Real T);
 
     //! Search through the partition function data to get value for given temperature
-    libMesh::Real search_partition_function(libMesh::Real T, unsigned int iso);
+    libMesh::Real search_partition_function(libMesh::Real T, unsigned int species_idx, unsigned int iso);
 
     //! Linear interpolation helper function
     libMesh::Real interpolate_values( int index_r, libMesh::Real T_star, const std::vector<libMesh::Real> & y) const;

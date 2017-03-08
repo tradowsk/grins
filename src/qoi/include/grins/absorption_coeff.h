@@ -73,7 +73,7 @@ namespace GRINS
     */
     AbsorptionCoeff(SharedPtr<Chemistry> & chem, SharedPtr<HITRAN> & hitran,
                     libMesh::Real nu_min, libMesh::Real nu_max,
-                    libMesh::Real desired_nu, const std::string & species,
+                    libMesh::Real desired_nu, const std::vector<std::string> & species_list,
                     libMesh::Real thermo_pressure);
 
     //! Calculate the absorption coefficient at a quadratue point
@@ -112,10 +112,10 @@ namespace GRINS
     libMesh::Real _rad_coeff;
 
     //! Index of minimum wavenumber
-    unsigned int _min_index;
+    std::vector<unsigned int> _min_index;
 
     //! Index of maximum wavenumber
-    unsigned int _max_index;
+    std::vector<unsigned int> _max_index;
 
     //! Thermodynamic Pressure [atm]
     libMesh::Real _thermo_pressure;
@@ -123,20 +123,20 @@ namespace GRINS
     //! Flag for whether Thermodynamic Pressure is calculated or constant
     bool _calc_thermo_pressure;
 
-    //! Index for the species of interest
-    unsigned int _species_idx;
+    //! Variable indices for the species of interest
+    std::vector<unsigned int> _species_idx;
 
     //! 2D coefficient matrix for approximating the Voigt profile
     std::vector<std::vector<libMesh::Real> > _voigt_coeffs;
 
     //! Absorption coefficient [cm^-1]
-    libMesh::Real kv(libMesh::Real P,libMesh::Real T, libMesh::Real X, libMesh::Real M);
+    libMesh::Real kv(unsigned int species_var_index, libMesh::Real P, libMesh::Real T, libMesh::Real X, libMesh::Real M);
 
     //! Doppler broadening [cm^-1]
     libMesh::Real nu_D(libMesh::Real nu, libMesh::Real T,libMesh::Real M);
 
     //! Collisional broadening [cm^-1]
-    libMesh::Real nu_C(libMesh::Real T,libMesh::Real X,libMesh::Real P,unsigned int index);
+    libMesh::Real nu_C(unsigned int species_idx,libMesh::Real T,libMesh::Real X,libMesh::Real P,unsigned int index);
 
     //! Calculate the Voigt profile [cm^-1]
     /*!

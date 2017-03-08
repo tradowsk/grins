@@ -142,13 +142,29 @@ namespace GRINS
       {
         std::string material;
         this->get_var_value<std::string>(input,material,"QoI/SpectroscopicAbsorption/material","NoMaterial!");
-
-        std::string hitran_data;
-        this->get_var_value<std::string>(input,hitran_data,"QoI/SpectroscopicAbsorption/hitran_data_file","");
-
-        std::string hitran_partition;
-        this->get_var_value<std::string>(input,hitran_partition,"QoI/SpectroscopicAbsorption/hitran_partition_function_file","");
-          
+        
+        unsigned int num_species = input.vector_variable_size("QoI/SpectroscopicAbsorption/species_of_interest");
+        if (num_species <= 0)
+          libmesh_error_msg("ERROR: Could not find required input parameter: QoI/SpectroscopicAbsorption/species_of_interest");
+        
+        std::vector<std::string> species_list(num_species);
+        std::vector<std::string> hitran_data_files(num_species);
+        std::vector<std::string> hitran_partition_files(num_species);
+        
+        for (unsigned int s=0; s<num_species; s++)
+          {
+            std::string species = input("QoI/SpectroscopicAbsorption/species_of_interest","",s);
+            species_list[s] = species;
+            
+            std::string data;
+            this->get_var_value<std::string>(input,data,"QoI/SpectroscopicAbsorption/"+species+"/hitran_data_file","");
+            hitran_data_files[s] = data;
+            
+            std::string partition;
+            this->get_var_value<std::string>(input,partition,"QoI/SpectroscopicAbsorption/"+species+"/hitran_partition_function_file","");
+            hitran_partition_files[s] = partition;
+          }
+ 
         libMesh::Real T_min,T_max,T_step;
         std::string partition_temp_var = "QoI/SpectroscopicAbsorption/partition_temperatures";
         if (input.have_variable(partition_temp_var))
@@ -160,10 +176,7 @@ namespace GRINS
         else
           libmesh_error_msg("ERROR: Could not find tenmperature range specification for partition functions: "+partition_temp_var+" 'T_min T_max T_step'");
 
-        SharedPtr<HITRAN> hitran( new HITRAN(hitran_data,hitran_partition,T_min,T_max,T_step) );
-
-        std::string species;
-        this->get_var_value<std::string>(input,species,"QoI/SpectroscopicAbsorption/species_of_interest","");
+        SharedPtr<HITRAN> hitran( new HITRAN(hitran_data_files,hitran_partition_files,T_min,T_max,T_step) );
 
         SharedPtr<libMesh::FEMFunctionBase<libMesh::Real> > absorb;
 
@@ -183,10 +196,10 @@ namespace GRINS
 
 #if GRINS_HAVE_ANTIOCH
         SharedPtr<AntiochChemistry> chem( new AntiochChemistry(input,material) );
-        absorb = new AbsorptionCoeff<AntiochChemistry>(chem,hitran,nu_min,nu_max,nu_desired,species,thermo_pressure);
+        absorb = new AbsorptionCoeff<AntiochChemistry>(chem,hitran,nu_min,nu_max,nu_desired,species_list,thermo_pressure);
 #elif GRINS_HAVE_CANTERA
         SharedPtr<CanteraMixture> chem( new CanteraMixture(input,material) );
-        absorb = new AbsorptionCoeff<CanteraMixture>(chem,hitran,nu_min,nu_max,nu_desired,species,thermo_pressure);
+        absorb = new AbsorptionCoeff<CanteraMixture>(chem,hitran,nu_min,nu_max,nu_desired,species_list,thermo_pressure);
 #else
         libmesh_error_msg("ERROR: GRINS must be built with either Antioch or Cantera to use the SpectroscopicAbsorption QoI");
 #endif
