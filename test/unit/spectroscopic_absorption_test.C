@@ -56,6 +56,7 @@ namespace GRINSTesting
 #if GRINS_HAVE_ANTIOCH
     CPPUNIT_TEST( single_elem_mesh );
     CPPUNIT_TEST( multi_elem_mesh );
+    CPPUNIT_TEST( adjoint_refinement_bug );
 #endif
     CPPUNIT_TEST_SUITE_END();
 
@@ -83,6 +84,14 @@ namespace GRINSTesting
       libMesh::Real calc_answer = 0.520403290868787; // same physical conditions as single_elem_mesh, so answer should not change
 
       this->run_test(filename,calc_answer);
+    }
+
+    void adjoint_refinement_bug()
+    {
+      const std::string filename = std::string(GRINS_TEST_UNIT_INPUT_SRCDIR)+"/spectroscopic_absorption_qoi_adjoint_refinement.in";
+      libMesh::Real calc_answer = 0.520403290868787;
+
+      this->run_test(filename,calc_answer);      
     }
 
   private:
