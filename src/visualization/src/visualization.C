@@ -252,4 +252,17 @@ namespace GRINS
     return;
   }
 
+  std::string Visualization::get_output_file_prefix()
+  {
+    return this->_vis_output_file_prefix;
+  }
+
+  void Visualization::set_output_file_prefix(std::string & prefix)
+  {
+    if (prefix == "")
+      libmesh_error_msg("Cannot set output file prefix to empty string");
+
+    this->_vis_output_file_prefix = prefix;
+  }
+
 } // namespace GRINS
