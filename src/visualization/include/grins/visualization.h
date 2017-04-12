@@ -101,6 +101,10 @@ namespace GRINS
     void dump_visualization( SharedPtr<libMesh::EquationSystems> equation_system,
 			     const std::string& filename_prefix, const libMesh::Real time );
 
+    std::string get_output_file_prefix();
+
+    void set_output_file_prefix(std::string & prefix);
+
   protected:
 
     // Visualization options
