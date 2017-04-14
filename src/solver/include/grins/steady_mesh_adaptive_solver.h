@@ -58,12 +58,15 @@ namespace GRINS
        const libMesh::ParameterVector& parameters_in,
        libMesh::SensitivityData&       sensitivities) const;
 
+    void print_qoi_error_estimate( SolverContext & context);
+
   protected:
 
     virtual void init_time_solver( MultiphysicsSystem* system );
 
     void check_qoi_error_option_consistency( SolverContext& context );
 
+    bool solver_stuff( SolverContext & context, bool do_amr);
   };
 
 } // end namespace GRINS

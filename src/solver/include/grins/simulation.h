@@ -173,6 +173,8 @@ namespace GRINS
 
     bool _have_restart;
 
+    bool _output_after_amr;
+
   private:
 
     Simulation();
