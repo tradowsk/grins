@@ -26,6 +26,9 @@
 // This class
 #include "grins/simulation.h"
 
+// C++
+#include <numeric>
+
 // GRINS
 #include "grins/grins_enums.h"
 #include "grins/simulation_builder.h"
@@ -44,6 +47,7 @@
 #include "libmesh/parameter_vector.h"
 #include "libmesh/qoi_set.h"
 #include "libmesh/sensitivity_data.h"
+#include "libmesh/error_vector.h"
 
 namespace GRINS
 {
@@ -73,7 +77,8 @@ namespace GRINS
        _error_estimator_options(input),
        _error_estimator(), // effectively NULL
        _do_adjoint_solve(false), // Helper function will set final value
-       _have_restart(false)
+       _have_restart(false),
+       _output_after_amr( input("vis-options/output_after_amr", false ) )
   {
     libmesh_deprecated();
 
@@ -120,7 +125,8 @@ namespace GRINS
        _error_estimator_options(input),
        _error_estimator(), // effectively NULL
        _do_adjoint_solve(false), // Helper function will set final value
-       _have_restart(false)
+       _have_restart(false),
+       _output_after_amr( input("vis-options/output_after_amr", false ) )
   {
     this->build_solver(input);
 
@@ -286,6 +292,7 @@ namespace GRINS
     context.qoi_output = _qoi_output;
     context.do_adjoint_solve = _do_adjoint_solve;
     context.have_restart = _have_restart;
+    context.output_after_amr = _output_after_amr;
 
     if (_output_residual_sensitivities &&
         !_forward_parameters.parameter_vector.size())

@@ -68,6 +68,7 @@ namespace GRINS
     bool print_perflog;
     bool print_scalars;
     bool do_adjoint_solve;
+    bool output_after_amr;
 
     SharedPtr<QoIOutput> qoi_output;
 

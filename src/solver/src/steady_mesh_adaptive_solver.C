@@ -27,6 +27,7 @@
 
 // C++
 #include <iomanip>
+#include <numeric>
 
 // GRINS
 #include "grins/solver_context.h"
@@ -78,6 +79,9 @@ namespace GRINS
 
   void SteadyMeshAdaptiveSolver::solve( SolverContext& context )
   {
+    if ( context.output_after_amr && !(_mesh_adaptivity_options.is_mesh_adaptive()) )
+      libmesh_error_msg("You cannot request 'vis-options/output_after_amr' unless the mesh is adaptive");
+
     // Check that our error estimator options are consistent
     this->check_qoi_error_option_consistency(context);
 
@@ -107,20 +111,37 @@ namespace GRINS
       } // r_step for-loop
 
     if (!converged)
-      if (context.output_after_amr)
-        solver_stuff(context,false);
+      {
+        if (context.output_after_amr)
+          solver_stuff(context,false);
+        else
+          {
+            if (context.error_estimator)
+              {
+                libMesh::ErrorVector error;
+                this->estimate_error_for_amr( context, error );
+                this->check_for_convergence( context, error );
+              }
+
+            if (_error_estimator_options.compute_qoi_error_estimate())
+              this->print_qoi_error_estimate(context);
+          }
+
+      } // if !converged
 
   }
 
   // TODO proper name
   bool SteadyMeshAdaptiveSolver::solver_stuff( SolverContext & context, bool do_amr)
   {
-    const std::string output_file_prefix = "";
+    std::string output_file_prefix = "";
     if (!do_amr)
-      if (context.output_viz)
+      if (context.output_vis)
         {
-          output_file_prefix = context.viz->get_output_file_prefix();
-          context.viz->set_output_file_prefix(output_file_prefix+"_postAMR");
+          output_file_prefix = context.vis->get_output_file_prefix();
+
+          std::string new_prefix = output_file_prefix+"_postAMR";
+          context.vis->set_output_file_prefix(new_prefix);
         }
 
     // Solve the forward problem
@@ -153,15 +174,7 @@ namespace GRINS
 
     // Get the global error estimate if you can and are asked to
     if (_error_estimator_options.compute_qoi_error_estimate())
-      {
-        std::cout << "==========================================================" << std::endl;
-        for (unsigned int i = 0; i != context.system->qoi.size(); i++)
-          {
-            libMesh::AdjointRefinementEstimator* adjoint_ref_error_estimator = libMesh::cast_ptr<libMesh::AdjointRefinementEstimator*>( context.error_estimator.get() );
-            std::cout <<"Error Estimate for QoI("<<i<<"): " <<adjoint_ref_error_estimator->get_global_QoI_error_estimate(i) <<std::endl;
-          }
-        std::cout << "==========================================================" << std::endl;
-      }
+      this->print_qoi_error_estimate(context);
 
     // Check for convergence of error
     bool converged = this->check_for_convergence( context, error );
@@ -180,11 +193,13 @@ namespace GRINS
       }
 
     if (!do_amr)
-      if (context.output_viz)
+      if (context.output_vis)
         {
           libmesh_assert_not_equal_to(output_file_prefix,"");
-          context.viz->set_output_file_prefix(output_file_prefix);
+          context.vis->set_output_file_prefix(output_file_prefix);
         }
+  
+    return converged;
   }
 
   void SteadyMeshAdaptiveSolver::adjoint_qoi_parameter_sensitivity
@@ -215,5 +230,15 @@ namespace GRINS
         ( context.equation_system, context.system, parameters_in );
   }
 
+  void SteadyMeshAdaptiveSolver::print_qoi_error_estimate( SolverContext & context)
+  {
+    std::cout << "==========================================================" << std::endl;
+    for (unsigned int i = 0; i != context.system->qoi.size(); i++)
+      {
+        libMesh::AdjointRefinementEstimator* adjoint_ref_error_estimator = libMesh::cast_ptr<libMesh::AdjointRefinementEstimator*>( context.error_estimator.get() );
+        std::cout <<"Error Estimate for QoI("<<i<<"): " <<adjoint_ref_error_estimator->get_global_QoI_error_estimate(i) <<std::endl;
+      }
+    std::cout << "==========================================================" << std::endl;
+  }
 
 } // end namespace GRINS
