@@ -63,4 +63,12 @@ namespace GRINS
     QoIBase::_qoi_value = sys_qoi;
   }
 
+  void SpectroscopicAbsorption::finalize_derivative(libMesh::NumericVector<libMesh::Number> & derivatives)
+  {
+    if (!derivatives.closed())
+      derivatives.close();
+
+    derivatives.scale(- 100.0 * QoIBase::_qoi_value);
+  }
+
 } //namespace GRINS
