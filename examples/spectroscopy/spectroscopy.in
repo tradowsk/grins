@@ -120,7 +120,8 @@
     calc_thermo_pressure = 'false'
 
     [./Rayfire]
-      origin = '0.0 0.0055'
+      origin_x = '0.0'
+      origin_y = '0.006943184420297 0.033000947820757 0.066999052179243 0.093056815579703'
       theta = '0.0'
     [../]
     
@@ -128,8 +129,7 @@
 []
 
 [SpectroscopyExample]
-  wavenumber_range = '2171.0 2174.0 0.01'
-  output_prefix = 'example_data'
+  weights = '0.347854845137454 0.652145154862546 0.652145154862546 0.347854845137454'
 []
 
 [linear-nonlinear-solver]

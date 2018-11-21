@@ -197,7 +197,10 @@ namespace GRINS
         libmesh_error_msg("ERROR: GRINS must be built with either Antioch or Cantera to use the SpectroscopicAbsorption QoI");
 #endif
 
-        std::shared_ptr<RayfireMesh> rayfire( new RayfireMesh(input,"SpectroscopicAbsorption") );
+        
+          
+          std::shared_ptr<RayfireMesh> rayfire;
+        
 
         // This is the wavenumber of the "laser" or a range of wavenumbers to scan over
         std::string desired_wavenumber_var = "QoI/SpectroscopicAbsorption/desired_wavenumber";
@@ -220,7 +223,21 @@ namespace GRINS
             libmesh_error_msg("ERROR: GRINS must be built with either Antioch or Cantera to use the SpectroscopicAbsorption QoI");
 #endif
             
-            qoi = new SpectroscopicAbsorption(absorb,rayfire,qoi_name,output_as_csv);
+          libMesh::Real theta = input("QoI/SpectroscopicAbsorption/Rayfire/theta", -7.0);
+          
+          libMesh::Point origin;
+          origin(1) = input("QoI/SpectroscopicAbsorption/Rayfire/origin_y", 0.0);
+      
+          
+          for (unsigned int i=0; i<input.vector_variable_size("QoI/SpectroscopicAbsorption/Rayfire/origin_x"); ++i)
+            {
+             origin(0) = input("QoI/SpectroscopicAbsorption/Rayfire/origin_x", 0.0, i);
+             rayfire.reset( new RayfireMesh(origin,theta) );
+             qoi = new SpectroscopicAbsorption(absorb,rayfire,qoi_name,output_as_csv);
+             qois->add_qoi(*qoi);
+             do_final_add = false;
+            }
+            
           }
         else if (num_wavenumbers == 3)
           {

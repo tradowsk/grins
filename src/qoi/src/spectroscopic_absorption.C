@@ -61,7 +61,7 @@ namespace GRINS
 
     // absorption coefficient is calculated in [cm^-1], but path length is given in [m]
     // 100.0 factor converts pathlength to [cm]
-    sys_qoi = 1.0 - std::exp( -sys_qoi * 100.0 );
+    sys_qoi = /*1.0 -*/ std::exp( -sys_qoi * 100.0 );
     QoIBase::_qoi_value = sys_qoi;
   }
 

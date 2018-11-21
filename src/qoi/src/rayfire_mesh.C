@@ -82,6 +82,9 @@ namespace GRINS
 
   void RayfireMesh::init(const libMesh::MeshBase & mesh_base)
   {
+    std::cout <<"\n\n************ Rayfire init() start ************\n";
+    std::cout <<_origin <<std::endl <<std::endl;
+    
     // check if rayfire has already been initialized
     if (_elem_id_map.size() == 0)
     {
@@ -166,7 +169,7 @@ namespace GRINS
       }
 
     }
-
+    std::cout <<"\n\n************ Rayfire init() end ************\n\n";
   }
 
 
