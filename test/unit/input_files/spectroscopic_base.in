@@ -48,7 +48,6 @@
 []
 
 [BoundaryConditions]
-    bc_ids = '0:1:2:3'
     bc_id_name_map = 'Dirichlet'
 
     [./Dirichlet]
@@ -94,12 +93,10 @@
 
 [Mesh]
    [./Generation]
-      dimension = '2'
       x_min = '0.0'
       x_max = '0.10'
       y_min = '0.0'
       y_max = '0.10'
-      element_type = 'QUAD4'
 []
 
 [linear-nonlinear-solver]
